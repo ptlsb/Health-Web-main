@@ -1,0 +1,275 @@
+import React, { useContext, useState } from "react";
+import "./Chatbot.css";
+import { UserContext } from "../../Context/userContext";
+import ChatBot from "react-simple-chatbot";
+import { ThemeProvider } from "styled-components";
+import { useNavigate } from "react-router-dom";
+import funfacts from "./Funfacts";
+
+const theme = {
+  background: "#F4F5F6",
+  fontFamily: "sans-serif",
+  headerBgColor: "#15bea9",
+  headerFontColor: "#fff",
+  headerFontSize: "16px",
+  botBubbleColor: "#65b1ff",
+  botFontColor: "#fff",
+  userBubbleColor: "#59dd64",
+  userFontColor: "#fff",
+};
+
+const steps = [
+  {
+    id: "1",
+    message: "Hey! I am Medi-bot, how are you feeling today",
+    trigger: "expressions",
+  },
+  {
+    id: "expressions",
+    options: [
+      { value: "veryHappy", label: "😀", trigger: "veryHappy" },
+      { value: "happy", label: "🙂", trigger: "happy" },
+      { value: "normal", label: "😐", trigger: "normal" },
+      { value: "sad", label: "☹️", trigger: "sad" },
+      { value: "angry", label: "😡", trigger: "angry" },
+    ],
+  },
+  {
+    id: "veryHappy",
+    message: "Great Me too 😍",
+    trigger: "help",
+  },
+  {
+    id: "happy",
+    message:
+      "Hmm, Looks Like You are in good mood. Well I can make it great 😊",
+    trigger: "help",
+  },
+  {
+    id: "normal",
+    message:
+      "Ooh, Are You Confused Sir ? Don't Worry I am here to Assist You 👻",
+    trigger: "help",
+  },
+  {
+    id: "sad",
+    message:
+      "I am sorry to here that 😟 . Well i would suggest to read our random Fun-fact or Visit our Yoga Services or Read the latest feeds. You will feel better.🙂",
+    trigger: "help",
+  },
+  {
+    id: "angry",
+    message:
+      "😐 Oops, Did i do something wrong....But wait i am a bot i can't do that..🤥.  Well i suggest you to relax your mind, play some games,  watch some movies  and eat a lot of healthy tasty food just like me..😝",
+    trigger: "help",
+  },
+  {
+    id: "help",
+    message: "How can I help you?",
+    trigger: "options",
+  },
+  {
+    id: "options",
+    options: [
+      { value: "services", label: "Services", trigger: "services" },
+      {
+        value: "calculateBMI",
+        label: "Calculate BMI",
+        trigger: "calculateBMI",
+      },
+      {
+        value: "funFact",
+        label: "Give a random funfact",
+        trigger: "funFact",
+      },
+      {
+        value: "contact",
+        label: "Emergency",
+        trigger: "contact",
+      },
+      { value: "exit", label: "Exit", trigger: "end" },
+    ],
+  },
+  {
+    id: "services",
+    message: "select one of these services",
+    trigger: "selectServices",
+  },
+  {
+    id: "selectServices",
+    options: [
+      { value: "blogs", label: "Blogs", trigger: "selectedService" },
+      {
+        value: "bloodDonation",
+        label: "Blood donation",
+        trigger: "selectedService",
+      },
+      { value: "smartBMI", label: "Smart BMI", trigger: "selectedService" },
+      { value: "yogaAasans", label: "Yoga Aasans", trigger: "selectedService" },
+      { value: "portal", label: "IIITL Portal", trigger: "selectedService" },
+      { value: "goBack", label: "go back", trigger: "options" },
+    ],
+  },
+  {
+    id: "selectedService",
+    message: "opened {previousValue}",
+    trigger: "end",
+  },
+  {
+    id: "moreHelp",
+    message: "do you meed more help?",
+    trigger: "moreHelp-yes",
+  },
+  {
+    id: "moreHelp-yes",
+    options: [
+      { value: "yes", label: "Yes", trigger: "help" },
+      { value: "no", label: "No", trigger: "end" },
+    ],
+  },
+  {
+    id: "calculateBMI",
+    message: "Let's calculate your BMI",
+    trigger: "BMIHeightMessage",
+  },
+  {
+    id: "BMIHeightMessage",
+    message: "Enter your height",
+    trigger: "BMIHeight",
+  },
+  {
+    id: "BMIHeight",
+    user: true,
+    trigger: "BMIWeightMessage",
+  },
+  {
+    id: "BMIWeightMessage",
+    message: "Enter your weight",
+    trigger: "BMIWeight",
+  },
+  {
+    id: "BMIWeight",
+    user: true,
+    trigger: "BMIResult",
+  },
+  {
+    id: "BMIResult",
+    component: <BMI />,
+    asMessage: true,
+    trigger: "BMIKnowMore",
+  },
+  {
+    id: "BMIKnowMore",
+    message: "Want to know more about BMI?",
+    trigger: "BMIKnowMore-options",
+  },
+  {
+    id: "BMIKnowMore-options",
+    options: [
+      { value: "smartBMI", label: "Yes", trigger: "selectedService" },
+      { value: "no", label: "No", trigger: "end" },
+    ],
+  },
+  {
+    id: "funFact",
+    component: <FunFact />,
+    asMessage: true,
+    trigger: "moreHelp",
+  },
+  {
+    id: "contact",
+    message:
+      "Here You Go. I am giving you contact Number of {available nurse} - +91 67628 87232. ",
+    trigger: "help",
+  },
+  {
+    id: "end",
+    message: "Thank you, see you again!",
+    end: true,
+  },
+];
+
+function BMI({ steps }) {
+  return (
+    <div>
+      Your BMI is{" "}
+      {(
+        (steps.BMIWeight.value /
+          (steps.BMIHeight.value * steps.BMIHeight.value)) *
+        10000
+      ).toFixed(2)}
+    </div>
+  );
+}
+
+function FunFact() {
+  const randInt = Math.floor(Math.random() * 14);
+  return <div>{funfacts[randInt]}</div>;
+}
+
+function Chatbot() {
+  const [opened, setOpened] = useState(false);
+  const [key, setKey] = useState(Math.random());
+  const history = useNavigate();
+  const [user] = useContext(UserContext);
+
+  const handleEnd = ({ steps, values }) => {
+    // console.log(steps);
+    // console.log(values);
+    switch (values[values.length - 1]) {
+      case "blogs":
+        history("/home");
+        break;
+      case "bloodDonation":
+        history("/bloodDonation");
+        break;
+      case "smartBMI":
+        history("/smartBMI");
+        break;
+      case "yogaAasans":
+        history("/yoga");
+        break;
+      case "portal":
+        history("/portal");
+        break;
+      default:
+        break;
+    }
+    setTimeout(() => {
+      setKey(Math.random());
+      setOpened(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="chatbot">
+      <ThemeProvider theme={theme}>
+        <ChatBot
+          key={key}
+          steps={steps}
+          handleEnd={handleEnd}
+          opened={opened}
+          headerTitle="Health Assistant"
+          botAvatar={"/images/ChatbotIcon.svg"}
+          userAvatar={user?.profileImg}
+          avatarStyle={{ borderRadius: "100%" }}
+          floating={true}
+          floatingIcon={
+            <img
+              src={"/images/ChatbotIcon.svg"}
+              style={{ width: "60%" }}
+              alt="chatBot icon"
+            />
+          }
+          floatingStyle={{
+            backgroundColor: "#ffffff",
+            width: "60px",
+            boxShadow: "2px 2px 20px -8px #111",
+          }}
+        />
+      </ThemeProvider>
+    </div>
+  );
+}
+
+export default Chatbot;
